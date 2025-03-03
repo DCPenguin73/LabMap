@@ -52,39 +52,37 @@ public:
    // 
    // Construct
    //
-   map() 
-   {
-   }
-   map(const map &  rhs) 
-   { 
-   }
-   map(map && rhs) 
-   { 
-   }
+   map() : bst() {}
+   map(const map& rhs) : bst(rhs.bst) {}
+   map(map&& rhs) : bst(std::move(rhs.bst)) {}
    template <class Iterator>
-   map(Iterator first, Iterator last) 
+   map(Iterator first, Iterator last)
    {
+      insert(first, last);
    }
    map(const std::initializer_list <Pairs>& il) 
    {
+      insert(il);
    }
-  ~map()         
-   {
-   }
+  ~map() {}
 
    //
    // Assign
    //
    map & operator = (const map & rhs) 
    {
+      bst = rhs.bst;
       return *this;
    }
    map & operator = (map && rhs)
    {
+      bst = std::move(rhs.bst);
       return *this;
    }
    map & operator = (const std::initializer_list <Pairs> & il)
    {
+      bst.clear();
+      insert(il);
       return *this;
    }
    
@@ -94,11 +92,11 @@ public:
    class iterator;
    iterator begin() 
    { 
-      return iterator();
+      return iterator(bst.begin());
    }
    iterator end() 
    { 
-      return iterator();    
+      return iterator(bst.end());    
    }
 
    // 
@@ -118,19 +116,29 @@ public:
    //
    custom::pair<typename map::iterator, bool> insert(Pairs && rhs)
    {
-      return make_pair(iterator(), true);
+      auto result = bst.insert(std::move(rhs));
+      return make_pair(iterator(result.first), result.second);
    }
    custom::pair<typename map::iterator, bool> insert(const Pairs & rhs)
    {
-      return make_pair(iterator(), true);
+      auto result = bst.insert(rhs);
+      return make_pair(iterator(result.first), result.second);
    }
 
    template <class Iterator>
    void insert(Iterator first, Iterator last)
    {
+      for (auto it = first; it != last; ++it)
+      {
+         bst.insert(*it);
+      }
    }
    void insert(const std::initializer_list <Pairs>& il)
    {
+      for (auto& i : il)
+      {
+         bst.insert(i);
+      }
    }
 
    //
@@ -148,11 +156,11 @@ public:
    //
    bool empty() const noexcept 
    { 
-      return true; 
+      return bst.empty();
    }
    size_t size() const noexcept 
    { 
-      return 99;
+      return bst.size();
    }
 
 
@@ -178,21 +186,16 @@ public:
    //
    // Construct
    //
-   iterator()
-   {
-   }
-   iterator(const typename BST < pair <K, V> > :: iterator & rhs)
-   { 
-   }
-   iterator(const iterator & rhs) 
-   { 
-   }
+   iterator() : it(nullptr) {}
+   iterator(const typename BST < pair <K, V> > ::iterator& rhs) : it(rhs) {}
+   iterator(const iterator& rhs) : it(rhs.it) {}
 
    //
    // Assign
    //
    iterator & operator = (const iterator & rhs)
    {
+      it = rhs.it;
       return *this;
    }
 
@@ -201,11 +204,11 @@ public:
    //
    bool operator == (const iterator & rhs) const 
    { 
-      return true;
+      return it == rhs.it;
    }
    bool operator != (const iterator & rhs) const 
    { 
-      return true;
+      return it != rhs.it;
    }
 
    // 
@@ -213,7 +216,7 @@ public:
    //
    const pair <K, V> & operator * () const
    {
-      return *(new pair<K, V>);
+      return *it;
    }
 
    //
@@ -221,19 +224,25 @@ public:
    //
    iterator & operator ++ ()
    {
+      ++it;
       return *this;
    }
    iterator operator ++ (int postfix)
    {
-      return *this;
+      iterator temp(*this);
+      ++it;
+      return temp;
    }
    iterator & operator -- ()
    {
+      --it;
       return *this;
    }
    iterator  operator -- (int postfix)
    {
-      return *this;
+      iterator temp(*this);
+      --it;
+      return temp;
    }
 
 private:
@@ -290,6 +299,7 @@ const V& map <K, V> ::at(const K& key) const
 template <typename K, typename V>
 void swap(map <K, V>& lhs, map <K, V>& rhs)
 {
+   swap(lhs.bst, rhs.bst);
 }
 
 /*****************************************************

@@ -259,7 +259,16 @@ private:
 template <typename K, typename V>
 V& map <K, V> :: operator [] (const K& key)
 {
-   return *(new V);
+   Pairs pair(key, V());
+   iterator it = bst.find(pair);
+   if (it != bst.end())
+      return it->second;
+   else
+   {
+      bst.insert(pair);
+      return bst.find(pair)->second;
+   }
+   //return *(new V);
 }
 
 /*****************************************************
@@ -269,6 +278,7 @@ V& map <K, V> :: operator [] (const K& key)
 template <typename K, typename V>
 const V& map <K, V> :: operator [] (const K& key) const
 {
+   
    return *(new V);
 }
 

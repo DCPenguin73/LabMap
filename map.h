@@ -56,14 +56,8 @@ public:
    map(const map& rhs) : bst(rhs.bst) {}
    map(map&& rhs) : bst(std::move(rhs.bst)) {}
    template <class Iterator>
-   map(Iterator first, Iterator last)
-   {
-      insert(first, last);
-   }
-   map(const std::initializer_list <Pairs>& il) 
-   {
-      insert(il);
-   }
+   map(Iterator first, Iterator last) { insert(first, last); }
+   map(const std::initializer_list <Pairs>& il) { insert(il); }
   ~map() {}
 
    //
@@ -108,7 +102,7 @@ public:
          V & at (const K& k);
    iterator find(const K & k)
    {
-      return iterator();
+      return iterator(bst.find(k));
    }
 
    //
@@ -129,16 +123,12 @@ public:
    void insert(Iterator first, Iterator last)
    {
       for (auto it = first; it != last; ++it)
-      {
          bst.insert(*it);
-      }
    }
    void insert(const std::initializer_list <Pairs>& il)
    {
       for (auto& i : il)
-      {
          bst.insert(i);
-      }
    }
 
    //
@@ -146,6 +136,7 @@ public:
    //
    void clear() noexcept
    {
+      bst.clear();
    }
    size_t erase(const K& k);
    iterator erase(iterator it);
@@ -259,7 +250,15 @@ private:
 template <typename K, typename V>
 V& map <K, V> :: operator [] (const K& key)
 {
-   return *(new V);
+   pair<K, V> p(key, V());
+   auto it = bst.find(p);
+   if (it != bst.end())
+      return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+   else
+   {
+      bst.insert(p);
+      return const_cast<V&>((*bst.find(p)).second); // Use const_cast to remove const qualifier
+   }
 }
 
 /*****************************************************

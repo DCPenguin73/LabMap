@@ -573,6 +573,11 @@ namespace custom
             else
                nodeToDelete->pParent->pRight = nullptr;
          }
+         else
+         {
+            // If the node to delete is the root, update the root pointer
+            root = nullptr;
+         }
          delete nodeToDelete;
       }
       else if (nodeToDelete->pLeft == nullptr || nodeToDelete->pRight == nullptr)
@@ -585,6 +590,11 @@ namespace custom
                nodeToDelete->pParent->pLeft = child;
             else
                nodeToDelete->pParent->pRight = child;
+         }
+         else
+         {
+            // If the node to delete is the root, update the root pointer
+            root = child;
          }
          child->pParent = nodeToDelete->pParent;
          delete nodeToDelete;
@@ -621,9 +631,11 @@ namespace custom
             else
                nodeToDelete->pParent->pRight = successor;
          }
-         // If the node to delete is the root, update the root pointer
          else
+         {
+            // If the node to delete is the root, update the root pointer
             root = successor;
+         }
 
          // Update the successor's parent pointer and left child pointer
          successor->pParent = nodeToDelete->pParent;

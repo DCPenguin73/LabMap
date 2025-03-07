@@ -268,7 +268,12 @@ V& map <K, V> :: operator [] (const K& key)
 template <typename K, typename V>
 const V& map <K, V> :: operator [] (const K& key) const
 {
-   return *(new V);
+   auto it = find(key);
+   if (it == end())
+   {
+      throw std::out_of_range("Key not found");
+   }
+   return it->second; // Return a const reference to the value
 }
 
 /*****************************************************
@@ -308,7 +313,11 @@ void swap(map <K, V>& lhs, map <K, V>& rhs)
 template <typename K, typename V>
 size_t map<K, V>::erase(const K& k)
 {
-   return size_t(99);
+   auto it = find(k); // Find the element by key
+   if (it == end())
+      return 0; // Element not found
+   erase(it); // Erase the element by iterator
+   return 1; // Return the number of elements erased
 }
 
 /*****************************************************
@@ -318,7 +327,11 @@ size_t map<K, V>::erase(const K& k)
 template <typename K, typename V>
 typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator first, map<K, V>::iterator last)
 {
-   return iterator();
+   while (first != last)
+   {
+      first = erase(first); // Erase the element
+   }
+   return last; // Return the iterator to the element after the last erased element
 }
 
 /*****************************************************
@@ -328,7 +341,7 @@ typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator first, map<K, 
 template <typename K, typename V>
 typename map<K, V>::iterator map<K, V>::erase(map<K, V>::iterator it)
 {
-   return iterator();
+   return iterator(bst.erase(it.it));
 }
 
 }; //  namespace custom

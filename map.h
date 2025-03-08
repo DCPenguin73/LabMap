@@ -283,7 +283,18 @@ const V& map <K, V> :: operator [] (const K& key) const
 template <typename K, typename V>
 V& map <K, V> ::at(const K& key)
 {
-   return *(new V);
+   pair<K, V> p(key, V());
+   auto it = bst.find(p);
+   if (it != bst.end())
+   {
+      return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+   }
+   else
+   {
+      throw std::out_of_range("invalid map<K, T> key");
+   }
+
+   //return *(new V);
 }
 
 /*****************************************************
@@ -293,7 +304,17 @@ V& map <K, V> ::at(const K& key)
 template <typename K, typename V>
 const V& map <K, V> ::at(const K& key) const
 {
-   return *(new V);
+   pair<K, V> p(key, V());
+   auto it = bst.find(p);
+   if (it != bst.end())
+   {
+      return (*it).second;
+   }
+   else
+   {
+      throw std::out_of_range("invalid map<K, T> key");
+   }
+   //return *(new V);
 }
 
 /*****************************************************

@@ -251,14 +251,17 @@ template <typename K, typename V>
 V& map <K, V> :: operator [] (const K& key)
 {
    pair<K, V> p(key, V());
-   auto it = bst.find(p);
-   if (it != bst.end())
-      return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
-   else
-   {
-      bst.insert(p);
-      return const_cast<V&>((*bst.find(p)).second); // Use const_cast to remove const qualifier
-   }
+    auto it = bst.find(p);
+    if (it != bst.end())
+    {
+        return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+    }
+    else
+    {
+        bst.insert(std::move(p)); // Use move semantics to avoid unnecessary copies
+        it = bst.find(p); // Find the newly inserted element
+        return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+    }
 }
 
 /*****************************************************

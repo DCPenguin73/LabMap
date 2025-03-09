@@ -482,7 +482,6 @@ namespace custom
    {
       std::pair<iterator, bool> pairReturn(end(), false);
 
-      // If empty, just insert at the root and return
       if (empty()) {
          root = new BNode(std::move(t));
          numElements = 1;
@@ -492,17 +491,14 @@ namespace custom
          return pairReturn;
       }
 
-      // Find insertion point
       BNode* current = root;
       BNode* parent = nullptr;
       bool goLeft = false;
 
       while (current != nullptr) {
          parent = current;
-         if (keepUnique)
-         {
-            if (t == current->data)
-            {
+         if (keepUnique) {
+            if (t == current->data) {
                pairReturn.first = iterator(current);
                pairReturn.second = false;
                return pairReturn;
@@ -518,9 +514,7 @@ namespace custom
          }
       }
 
-      // Insert new node
       BNode* newNode = new BNode(std::move(t));
-      // Insert red
       newNode->isRed = true;
 
       if (goLeft) {
@@ -534,15 +528,12 @@ namespace custom
       pairReturn.first = iterator(newNode);
       pairReturn.second = true;
 
-      // Balance tree
       newNode->balance();
 
-      // Ensure root is set properly
       BNode* head = newNode;
       while (head->pParent != nullptr)
          head = head->pParent;
       root = head;
-
 
       return pairReturn;
    }

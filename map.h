@@ -70,6 +70,7 @@ public:
    }
    map & operator = (map && rhs)
    {
+      clear();
       bst = std::move(rhs.bst);
       return *this;
    }
@@ -102,7 +103,7 @@ public:
          V & at (const K& k);
    iterator find(const K & k)
    {
-      return iterator(bst.find(k));
+      return iterator(bst.find( pair <K, V > (k)));
    }
 
    //
@@ -110,12 +111,12 @@ public:
    //
    custom::pair<typename map::iterator, bool> insert(Pairs && rhs)
    {
-      auto result = bst.insert(std::move(rhs));
+      auto result = bst.insert(std::move(rhs), true);
       return make_pair(iterator(result.first), result.second);
    }
    custom::pair<typename map::iterator, bool> insert(const Pairs & rhs)
    {
-      auto result = bst.insert(rhs);
+      auto result = bst.insert(rhs, true);
       return make_pair(iterator(result.first), result.second);
    }
 
@@ -123,21 +124,18 @@ public:
    void insert(Iterator first, Iterator last)
    {
       for (auto it = first; it != last; ++it)
-         bst.insert(*it);
+         bst.insert(*it, true);
    }
    void insert(const std::initializer_list <Pairs>& il)
    {
-      for (auto& i : il)
-         bst.insert(i);
+      for (auto&& i : il)
+         bst.insert(i, true);
    }
 
    //
    // Remove
    //
-   void clear() noexcept
-   {
-      bst.clear();
-   }
+   void clear() noexcept { bst.clear(); }
    size_t erase(const K& k);
    iterator erase(iterator it);
    iterator erase(iterator first, iterator last);
@@ -145,14 +143,8 @@ public:
    //
    // Status
    //
-   bool empty() const noexcept 
-   { 
-      return bst.empty();
-   }
-   size_t size() const noexcept 
-   { 
-      return bst.size();
-   }
+   bool empty() const noexcept { return bst.empty(); }
+   size_t size() const noexcept { return bst.size(); }
 
 
 private:
@@ -177,9 +169,9 @@ public:
    //
    // Construct
    //
-   iterator() : it(nullptr) {}
-   iterator(const typename BST < pair <K, V> > ::iterator& rhs) : it(rhs) {}
-   iterator(const iterator& rhs) : it(rhs.it) {}
+   iterator() {}
+   iterator(const typename BST < pair <K, V> > ::iterator& rhs) { it = rhs; }
+   iterator(const iterator& rhs) { *this = rhs; }
 
    //
    // Assign
@@ -193,14 +185,8 @@ public:
    //
    // Compare
    //
-   bool operator == (const iterator & rhs) const 
-   { 
-      return it == rhs.it;
-   }
-   bool operator != (const iterator & rhs) const 
-   { 
-      return it != rhs.it;
-   }
+   bool operator == (const iterator & rhs) const { return it == rhs.it; }
+   bool operator != (const iterator & rhs) const { return it != rhs.it; }
 
    // 
    // Access
@@ -250,15 +236,21 @@ private:
 template <typename K, typename V>
 V& map <K, V> :: operator [] (const K& key)
 {
-   pair<K, V> p(key, V());
-   auto it = bst.find(p);
-   if (it != bst.end())
-      return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
-   else
-   {
-      bst.insert(p);
-      return const_cast<V&>((*bst.find(p)).second); // Use const_cast to remove const qualifier
-   }
+   custom::pair<K, V> p(key);
+
+   auto r = bst.insert(p, true);
+   typename BST < pair <K, V >> ::iterator it = r.first;
+   assert(end() != it);
+   return it.pNode->data.second;
+   //pair<K, V> p(key, V());
+   //auto it = bst.find(p);
+   //if (it != bst.end())
+   //   return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+   //else
+   //{
+   //   bst.insert(p);
+   //   return const_cast<V&>((*bst.find(p)).second); // Use const_cast to remove const qualifier
+   //}
 }
 
 /*****************************************************
@@ -268,12 +260,19 @@ V& map <K, V> :: operator [] (const K& key)
 template <typename K, typename V>
 const V& map <K, V> :: operator [] (const K& key) const
 {
-   auto it = find(key);
-   if (it == end())
-   {
-      throw std::out_of_range("Key not found");
-   }
-   return it->second; // Return a const reference to the value
+   pair<K, V> p(key, V());
+
+   typename BST < pair <K, V >> ::iterator it = bst.find(p);
+   if (end() == it)
+      return V();
+   else
+      return it.pNode->data.second;
+   //auto it = find(key);
+   //if (it == end())
+   //{
+   //   throw std::out_of_range("Key not found");
+   //}
+   //return it->second; // Return a const reference to the value
 }
 
 /*****************************************************
@@ -283,18 +282,22 @@ const V& map <K, V> :: operator [] (const K& key) const
 template <typename K, typename V>
 V& map <K, V> ::at(const K& key)
 {
-   pair<K, V> p(key, V());
-   auto it = bst.find(p);
-   if (it != bst.end())
-   {
-      return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
-   }
-   else
-   {
+   pair<K, V> p(key);
+   typename BST < pair <K, V >> ::iterator it = bst.find(p);
+   if (end() == it)
       throw std::out_of_range("invalid map<K, T> key");
-   }
-
-   //return *(new V);
+   else
+      return it.pNode->data.second;
+   //pair<K, V> p(key, V());
+   //auto it = bst.find(p);
+   //if (it != bst.end())
+   //{
+   //   return const_cast<V&>((*it).second); // Use const_cast to remove const qualifier
+   //}
+   //else
+   //{
+   //   throw std::out_of_range("invalid map<K, T> key");
+   //}
 }
 
 /*****************************************************
@@ -304,7 +307,13 @@ V& map <K, V> ::at(const K& key)
 template <typename K, typename V>
 const V& map <K, V> ::at(const K& key) const
 {
-   pair<K, V> p(key, V());
+   pair<K, V> p(key);
+   typename BST < pair <K, V >> ::iterator it = bst.find(p);
+   if (end() == it)
+      throw std::out_of_range("invalid map<K, T> key");
+   else
+      return it.pNode->data.second;
+   /*pair<K, V> p(key, V());
    auto it = bst.find(p);
    if (it != bst.end())
    {
@@ -313,8 +322,7 @@ const V& map <K, V> ::at(const K& key) const
    else
    {
       throw std::out_of_range("invalid map<K, T> key");
-   }
-   //return *(new V);
+   }*/
 }
 
 /*****************************************************
